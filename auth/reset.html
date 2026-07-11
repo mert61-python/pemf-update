@@ -52,6 +52,18 @@
     const msg = document.getElementById("msg");
     const setMsg = (t, ok) => { msg.textContent = t; msg.className = "msg " + (ok ? "ok" : "err"); };
 
+    // Supabase İngilizce hatalarını Türkçe'ye çevir (süreç tamamen Türkçe).
+    function mapErr(raw) {
+      const m = (raw || "").toLowerCase();
+      if (m.includes("different from the old") || m.includes("should be different") || m.includes("same_password") || m.includes("same as")) return "Yeni şifre eskisiyle aynı olamaz.";
+      if (m.includes("at least") || (m.includes("password") && m.includes("6")) || m.includes("too short")) return "Şifre en az 6 karakter olmalı.";
+      if (m.includes("weak") || m.includes("pwned") || m.includes("leaked")) return "Şifre çok zayıf, daha güçlü bir şifre seç.";
+      if (m.includes("session") || m.includes("expired") || m.includes("invalid") || m.includes("token") || m.includes("missing")) return "Bağlantı süresi dolmuş. E-postandaki sıfırlama linkine tekrar tıkla.";
+      if (m.includes("rate") || m.includes("too many") || m.includes("seconds") || m.includes("security purposes")) return "Çok fazla deneme. Biraz bekleyip tekrar dene.";
+      if (m.includes("network") || m.includes("fetch") || m.includes("failed to")) return "Bağlantı hatası. İnternetini kontrol et.";
+      return "İşlem başarısız. Lütfen tekrar dene.";
+    }
+
     // Recovery token'ı URL'den okuyup (detectSessionInUrl) oturum kurulur; sonra updateUser çalışır.
     let ready = false;
     sb.auth.onAuthStateChange((event) => { if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") ready = true; });
@@ -62,7 +74,7 @@
       if (pw !== pw2) return setMsg("Şifreler eşleşmiyor.", false);
       setMsg("Güncelleniyor…", true);
       const { error } = await sb.auth.updateUser({ password: pw });
-      if (error) return setMsg("Hata: " + error.message, false);
+      if (error) return setMsg(mapErr(error.message), false);
       document.getElementById("card").className = "card done";
       document.getElementById("sub").style.display = "none";
       document.getElementById("form").innerHTML =
